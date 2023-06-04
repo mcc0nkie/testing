@@ -1,0 +1,17 @@
+Timer unit: 1e-09 s
+
+Total time: 0.353019 s
+File: /home/taco/Projects/testing/testing/sqlite_test.py
+Function: main at line 5
+
+Line #      Hits         Time  Per Hit   % Time  Line Contents
+==============================================================
+     5                                           @profile
+     6                                           def main():
+     7         1     420533.0 420533.0      0.1      conn = sqlite3.connect('sample.db')
+     8         1  346563548.0 346563548.0     98.2      iris = pd.read_csv('https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv')
+     9         1    6035282.0 6035282.0      1.7      iris.to_sql('iris', conn, if_exists='replace', index=False)
+
+
+Memory used: 5.375 MiB
+Time taken: 0.0003531231880187988 seconds
