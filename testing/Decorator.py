@@ -30,7 +30,7 @@ def profile(func):
             f.write(f"\nMemory used: {memory_used} MiB\n")
 
             # Write time taken to the file
-            f.write(f"Time taken: {(end_time - start_time)/1000} seconds\n")
+            f.write(f"Time taken: {end_time - start_time} seconds\n")
 
         return result
 
