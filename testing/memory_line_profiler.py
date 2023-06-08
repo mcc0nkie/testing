@@ -1,36 +1,50 @@
-from memory_profiler import memory_usage, profile as mem_profile
+import inspect
+from memory_profiler import memory_usage
 from line_profiler import LineProfiler
 import time
 import os
 import psutil
 
-def profile(func):
-    def wrapper(*args, **kwargs):
-        # Initialize line profiler
-        line_prof = LineProfiler()
-        wrapped = line_prof(func)
+def profile(line_profiler_enabled=True, memory_profiler_enabled=True):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            # Start the line profiler
+            if line_profiler_enabled:
+                lp = LineProfiler()
+                lp_wrapper = lp(func)
+            else:
+                lp_wrapper = func
 
-        # Memory profiling
-        mem_profile_start = memory_usage(psutil.Process(os.getpid()).pid, interval=0.1, timeout=1)
-        
-        start_time = time.time()
-        # Call function
-        result = wrapped(*args, **kwargs)
-        end_time = time.time()
+            # Start memory tracking
+            if memory_profiler_enabled:
+                mem_usage_start = memory_usage(psutil.Process(os.getpid()).pid, interval=0.1, timeout=1)
+            else:
+                mem_usage_start = None
 
-        mem_profile_end = memory_usage(psutil.Process(os.getpid()).pid, interval=0.1, timeout=1)
-        
-        # Write the line profiler results to a file
-        with open('profiler_results.txt', 'a+') as f:  # Open in append mode
-            f.write(f"Profiler results for function {func.__name__}:\n")
-            line_prof.print_stats(stream=f)
+            # Run the function with line profiling
+            start_time = time.time()
+            result = lp_wrapper(*args, **kwargs)
+            end_time = time.time()
 
-            # Calculate and write memory usage to the file
-            memory_used = max(mem_profile_end) - min(mem_profile_start)
-            f.write(f"\nMemory used: {memory_used} MiB\n")
-            f.write(f"Time taken: {end_time - start_time} seconds\n")
-            f.write("\n" + "-" * 50 + "\n")  # Separator for readability
-        
-        return result
+            # End memory tracking
+            if memory_profiler_enabled:
+                mem_usage_end = memory_usage(psutil.Process(os.getpid()).pid, interval=0.1, timeout=1)
+            else:
+                mem_usage_end = None
 
-    return wrapper
+            # Write the line profiler results to a file
+            with open('profile_log.txt', 'w') as f:
+                if line_profiler_enabled:
+                    lp.print_stats(stream=f)
+
+                # Calculate and write memory usage to the file
+                if memory_profiler_enabled:
+                    memory_used = max(mem_usage_end) - min(mem_usage_start)
+                    f.write(f"\nMemory used: {memory_used} MiB\n")
+
+                # Write time taken to the file
+                f.write(f"Time taken: {end_time - start_time} seconds\n")
+
+            return result
+        return wrapper
+    return decorator
