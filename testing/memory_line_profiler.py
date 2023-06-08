@@ -9,36 +9,37 @@ def profile(line_profiler_enabled=True, memory_profiler_enabled=True):
     def decorator(func):
         def wrapper(*args, **kwargs):
             # Start the line profiler
+            lp = None
             if line_profiler_enabled:
                 lp = LineProfiler()
-                lp_wrapper = lp(func)
-            else:
-                lp_wrapper = func
-
+                lp.add_function(func)
+                
             # Start memory tracking
+            mem_usage_start = None
             if memory_profiler_enabled:
                 mem_usage_start = memory_usage(psutil.Process(os.getpid()).pid, interval=0.1, timeout=1)
-            else:
-                mem_usage_start = None
 
             # Run the function with line profiling
             start_time = time.time()
-            result = lp_wrapper(*args, **kwargs)
+            if lp:
+                lp.enable_by_count()
+            result = func(*args, **kwargs)
+            if lp:
+                lp.disable_by_count()
             end_time = time.time()
 
             # End memory tracking
+            mem_usage_end = None
             if memory_profiler_enabled:
                 mem_usage_end = memory_usage(psutil.Process(os.getpid()).pid, interval=0.1, timeout=1)
-            else:
-                mem_usage_end = None
 
             # Write the line profiler results to a file
             with open('profile_log.txt', 'w') as f:
-                if line_profiler_enabled:
+                if lp:
                     lp.print_stats(stream=f)
 
                 # Calculate and write memory usage to the file
-                if memory_profiler_enabled:
+                if mem_usage_start and mem_usage_end:
                     memory_used = max(mem_usage_end) - min(mem_usage_start)
                     f.write(f"\nMemory used: {memory_used} MiB\n")
 
