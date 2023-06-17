@@ -1,74 +1,41 @@
-Timer unit: 1e-09 s
+Sub CopyVBAModules()
 
-Total time: 0 s
-File: /home/taco/Projects/testing/testing/sqlite_test.py
-Function: cached_factorial at line 18
+    Dim sourceVBProject As VBIDE.VBProject
+    Dim destVBProject As VBIDE.VBProject
+    Dim vbComp As VBIDE.VBComponent
+    Dim module As String
 
-Line #      Hits         Time  Per Hit   % Time  Line Contents
-==============================================================
-    18                                           @profile
-    19                                           def cached_factorial(n):
-    20                                               return factorial(n)
+    ' Open the source workbook
+    Dim sourceWorkbook As Workbook
+    Set sourceWorkbook = Workbooks.Open("C:\Path\To\Your\Source\Workbook.xlsm")
+    Set sourceVBProject = sourceWorkbook.VBProject
+    
+    ' Set the destination project
+    Set destVBProject = ThisWorkbook.VBProject
 
+    ' List all the module names you want to copy
+    Dim moduleNames As Variant
+    moduleNames = Array("protections", "validations", "rules")
 
-Memory used: 0.375 MiB
-Time taken: 3.6842410564422607 seconds
-Profiler results for function main:
-Timer unit: 1e-09 s
+    ' Remove the modules from the destination project if they exist
+    For Each module In moduleNames
+        On Error Resume Next
+        destVBProject.VBComponents.Remove destVBProject.VBComponents(module)
+        On Error GoTo 0
+    Next module
 
-Total time: 0.104274 s
-File: /home/taco/Projects/testing/testing/sqlite_test.py
-Function: main at line 5
+    ' Export the modules from the source project and import them to the destination project
+    For Each module In moduleNames
+        On Error Resume Next
+        Set vbComp = sourceVBProject.VBComponents(module)
+        If Not vbComp Is Nothing Then
+            vbComp.Export "C:\Temp\" & module & ".bas"
+            destVBProject.VBComponents.Import "C:\Temp\" & module & ".bas"
+        End If
+        On Error GoTo 0
+    Next module
 
-Line #      Hits         Time  Per Hit   % Time  Line Contents
-==============================================================
-     5                                           @profile
-     6                                           def main():
-     7         1     456402.0 456402.0      0.4      conn = sqlite3.connect('sample.db')
-     8         1   96658701.0 96658701.0     92.7      iris = pd.read_csv('https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv')
-     9         1    7158747.0 7158747.0      6.9      iris.to_sql('iris', conn, if_exists='replace', index=False)
-
-
-Memory used: 5.375 MiB
-Time taken: 0.10439085960388184 seconds
-
---------------------------------------------------
-Profiler results for function factorial:
-Timer unit: 1e-09 s
-
-Total time: 1.62063 s
-File: /home/taco/Projects/testing/testing/sqlite_test.py
-Function: factorial at line 11
-
-Line #      Hits         Time  Per Hit   % Time  Line Contents
-==============================================================
-    11                                           @profile
-    12                                           def factorial(n):
-    13         1       2037.0   2037.0      0.0      result = 1
-    14    100000   16221259.0    162.2      1.0      for i in range(1, n + 1):
-    15    100000 1604402043.0  16044.0     99.0          result *= i
-    16         1        510.0    510.0      0.0      return result
-
-
-Memory used: 0.375 MiB
-Time taken: 1.67537522315979 seconds
-
---------------------------------------------------
-Profiler results for function cached_factorial:
-Timer unit: 1e-09 s
-
-Total time: 0 s
-File: /home/taco/Projects/testing/testing/sqlite_test.py
-Function: cached_factorial at line 18
-
-Line #      Hits         Time  Per Hit   % Time  Line Contents
-==============================================================
-    18                                           @profile
-    19                                           def cached_factorial(n):
-    20                                               return factorial(n)
-
-
-Memory used: 0.375 MiB
-Time taken: 3.685410499572754 seconds
-
---------------------------------------------------
+    ' Close the source workbook without saving any changes
+    sourceWorkbook.Close False
+    
+End Sub
