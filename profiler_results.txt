@@ -1,54 +1,72 @@
 Sub CopyVBAModules()
-     Dim sourceVBProject As VBIDE.VBProject 
-     Dim destVBProject As VBIDE.VBProject 
-     Dim vbComp As VBIDE.VBComponent 
-     Dim module As String 
-     Dim tempFolder As String 
+    Dim sourceVBProject As VBIDE.VBProject 
+    Dim destVBProject As VBIDE.VBProject 
+    Dim vbComp As VBIDE.VBComponent 
+    Dim component As String 
+    Dim tempFolder As String 
 
-     ' Open the source workbook 
-     Dim sourceWorkbook As Workbook 
-     Set sourceWorkbook = Workbooks.Open("C:\Path\To\Your\Source\Workbook.xlsm") 
-     Set sourceVBProject = sourceWorkbook.VBProject 
+    ' Open the source workbook 
+    Dim sourceWorkbook As Workbook 
+    Set sourceWorkbook = Workbooks.Open("C:\Path\To\Your\Source\Workbook.xlsm") 
+    Set sourceVBProject = sourceWorkbook.VBProject 
 
-     ' Set the destination project 
-     Set destVBProject = ThisWorkbook.VBProject 
+    ' Set the destination project 
+    Set destVBProject = ThisWorkbook.VBProject 
 
-     ' List all the module names you want to copy 
-     ' Adding UserForms 'uf1' and 'uf2' to the array
-     Dim moduleNames As Variant 
-     moduleNames = Array("protections", "validations", "rules", "uf1", "uf2") 
+    ' List all the component names you want to copy 
+    Dim componentNames As Variant 
+    componentNames = Array("protections", "validations", "rules") 
 
-     ' Remove the modules from the destination project if they exist 
-     For Each module In moduleNames 
-         On Error Resume Next 
-         destVBProject.VBComponents.Remove destVBProject.VBComponents(module) 
-         On Error GoTo 0 
-     Next module 
+    Dim userformNames As Variant 
+    userformNames = Array("uf1", "uf2") 
 
-     ' Create a temporary directory to hold the .bas files 
-     tempFolder = "C:\Temp\" & Format(Now, "yyyy-mm-dd-hh-mm-ss") & "\" 
-     MkDir tempFolder 
+    ' Remove the components from the destination project if they exist 
+    For Each component In componentNames 
+        On Error Resume Next 
+        destVBProject.VBComponents.Remove destVBProject.VBComponents(component) 
+        On Error GoTo 0 
+    Next component 
 
-     ' Export the modules from the source project and import them to the destination project 
-     For Each module In moduleNames 
-         On Error Resume Next 
-         Set vbComp = sourceVBProject.VBComponents(module) 
-         If Not vbComp Is Nothing Then 
-             vbComp.Export tempFolder & module & ".bas" 
-             destVBProject.VBComponents.Import tempFolder & module & ".bas" 
-         End If 
-         On Error GoTo 0 
-     Next module 
+    ' Create a temporary directory to hold the .bas files and .frm files
+    tempFolder = "C:\Temp\" & Format(Now, "yyyy-mm-dd-hh-mm-ss") & "\" 
+    MkDir tempFolder 
 
-     ' Close the source workbook without saving any changes 
-     sourceWorkbook.Close False 
+    ' Export the modules and userforms from the source project and import them to the destination project 
+    For Each component In componentNames 
+        On Error Resume Next 
+        Set vbComp = sourceVBProject.VBComponents(component) 
+        If Not vbComp Is Nothing Then 
+            vbComp.Export tempFolder & component & ".bas" 
+            destVBProject.VBComponents.Import tempFolder & component & ".bas" 
+        End If 
+        On Error GoTo 0 
+    Next component 
 
-     ' Delete the .bas files and remove the temporary directory 
-     For Each module In moduleNames 
-         On Error Resume Next 
-         Kill tempFolder & module & ".bas" 
-         On Error GoTo 0 
-     Next module 
+    For Each component In userformNames 
+        On Error Resume Next 
+        Set vbComp = sourceVBProject.VBComponents(component) 
+        If Not vbComp Is Nothing Then 
+            vbComp.Export tempFolder & component & ".frm" 
+            destVBProject.VBComponents.Import tempFolder & component & ".frm" 
+        End If 
+        On Error GoTo 0 
+    Next component 
 
-     RmDir tempFolder 
+    ' Close the source workbook without saving any changes 
+    sourceWorkbook.Close False 
+
+    ' Delete the .bas and .frm files and remove the temporary directory 
+    For Each component In componentNames 
+        On Error Resume Next 
+        Kill tempFolder & component & ".bas" 
+        On Error GoTo 0 
+    Next component 
+
+    For Each component In userformNames 
+        On Error Resume Next 
+        Kill tempFolder & component & ".frm" 
+        On Error GoTo 0 
+    Next component 
+
+    RmDir tempFolder 
 End Sub
