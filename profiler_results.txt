@@ -1,55 +1,54 @@
 Sub CopyVBAModules()
+     Dim sourceVBProject As VBIDE.VBProject 
+     Dim destVBProject As VBIDE.VBProject 
+     Dim vbComp As VBIDE.VBComponent 
+     Dim module As String 
+     Dim tempFolder As String 
 
-    Dim sourceVBProject As VBIDE.VBProject
-    Dim destVBProject As VBIDE.VBProject
-    Dim vbComp As VBIDE.VBComponent
-    Dim module As String
-    Dim tempFolder As String
+     ' Open the source workbook 
+     Dim sourceWorkbook As Workbook 
+     Set sourceWorkbook = Workbooks.Open("C:\Path\To\Your\Source\Workbook.xlsm") 
+     Set sourceVBProject = sourceWorkbook.VBProject 
 
-    ' Open the source workbook
-    Dim sourceWorkbook As Workbook
-    Set sourceWorkbook = Workbooks.Open("C:\Path\To\Your\Source\Workbook.xlsm")
-    Set sourceVBProject = sourceWorkbook.VBProject
-    
-    ' Set the destination project
-    Set destVBProject = ThisWorkbook.VBProject
+     ' Set the destination project 
+     Set destVBProject = ThisWorkbook.VBProject 
 
-    ' List all the module names you want to copy
-    Dim moduleNames As Variant
-    moduleNames = Array("protections", "validations", "rules")
+     ' List all the module names you want to copy 
+     ' Adding UserForms 'uf1' and 'uf2' to the array
+     Dim moduleNames As Variant 
+     moduleNames = Array("protections", "validations", "rules", "uf1", "uf2") 
 
-    ' Remove the modules from the destination project if they exist
-    For Each module In moduleNames
-        On Error Resume Next
-        destVBProject.VBComponents.Remove destVBProject.VBComponents(module)
-        On Error GoTo 0
-    Next module
+     ' Remove the modules from the destination project if they exist 
+     For Each module In moduleNames 
+         On Error Resume Next 
+         destVBProject.VBComponents.Remove destVBProject.VBComponents(module) 
+         On Error GoTo 0 
+     Next module 
 
-    ' Create a temporary directory to hold the .bas files
-    tempFolder = "C:\Temp\" & Format(Now, "yyyy-mm-dd-hh-mm-ss") & "\"
-    MkDir tempFolder
+     ' Create a temporary directory to hold the .bas files 
+     tempFolder = "C:\Temp\" & Format(Now, "yyyy-mm-dd-hh-mm-ss") & "\" 
+     MkDir tempFolder 
 
-    ' Export the modules from the source project and import them to the destination project
-    For Each module In moduleNames
-        On Error Resume Next
-        Set vbComp = sourceVBProject.VBComponents(module)
-        If Not vbComp Is Nothing Then
-            vbComp.Export tempFolder & module & ".bas"
-            destVBProject.VBComponents.Import tempFolder & module & ".bas"
-        End If
-        On Error GoTo 0
-    Next module
+     ' Export the modules from the source project and import them to the destination project 
+     For Each module In moduleNames 
+         On Error Resume Next 
+         Set vbComp = sourceVBProject.VBComponents(module) 
+         If Not vbComp Is Nothing Then 
+             vbComp.Export tempFolder & module & ".bas" 
+             destVBProject.VBComponents.Import tempFolder & module & ".bas" 
+         End If 
+         On Error GoTo 0 
+     Next module 
 
-    ' Close the source workbook without saving any changes
-    sourceWorkbook.Close False
+     ' Close the source workbook without saving any changes 
+     sourceWorkbook.Close False 
 
-    ' Delete the .bas files and remove the temporary directory
-    For Each module In moduleNames
-        On Error Resume Next
-        Kill tempFolder & module & ".bas"
-        On Error GoTo 0
-    Next module
+     ' Delete the .bas files and remove the temporary directory 
+     For Each module In moduleNames 
+         On Error Resume Next 
+         Kill tempFolder & module & ".bas" 
+         On Error GoTo 0 
+     Next module 
 
-    RmDir tempFolder
-    
+     RmDir tempFolder 
 End Sub
